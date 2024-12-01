@@ -4,8 +4,6 @@ import { useFrame } from '@react-three/fiber'
 import { useAnimations, useFBX, useGLTF } from '@react-three/drei'
 import { SkeletonUtils } from 'three-stdlib'
 import { useControls } from 'leva'
-import * as THREE from 'three'
-import { NodeShaderStage } from 'three/examples/jsm/nodes/Nodes'
 
 
 const corresponding = {
@@ -21,24 +19,42 @@ const corresponding = {
 };
 
 export function Avatar(props) {
+    const { audioRef, lipsync } = props;
+    const [audioStarted, setAudioStarted] = useState(false);
 
-    const { playAudio, script } = useControls({
-        playAudio: false,
-        script: { value: "Gorsuch", options: ["Gorsuch"] },
-    });
+    useEffect(() => {
+        if (!audioRef.current) {
+            setAnimation("Thinking");
+            return;
+        }
+        if (audioRef.current && !audioStarted) {
+            audioRef.current.play();
+            setAnimation("Talking");
+            setAudioStarted(true);
+        } else {
+            setAnimation("Thinking");
+        }
+    }, [audioRef.current, audioStarted]);
 
-    const audio = useMemo(() => new Audio(`Audios/${script}.mp3`), [script]);
-    const jsonFile = useLoader(THREE.FileLoader, `/Audios/${script}.json`);
-    const lipsync = JSON.parse(jsonFile);
+    // const { playAudio, script } = useControls({
+    //     playAudio: false,
+    //     script: { value: "Gorsuch", options: ["Gorsuch"] },
+    // });
+
+    // const audio = useMemo(() => new Audio(`Audios/${script}.wav`), [script]);
+    // const jsonFile = useLoader(THREE.FileLoader, `/Audios/${script}.json`);
+    // const lipsync = JSON.parse(jsonFile);
+
     const { animations: talkingAnimation } = useFBX(`/animations/Talking.fbx`);
     const { animations: HelloAnimation } = useFBX(`/animations/Hello.fbx`);
     const { animations: thinkingAnimation } = useFBX(`/animations/Idle.fbx`);
+
 
     talkingAnimation[0].name = "Talking";
     HelloAnimation[0].name = "Hello";
     thinkingAnimation[0].name = "Thinking";
 
-    const [animation, setAnimation] = useState("Talking");
+    const [animation, setAnimation] = useState("Thinking");
 
     const group = useRef();
     const { actions } = useAnimations(
@@ -51,20 +67,29 @@ export function Avatar(props) {
         return () => actions[animation].fadeOut(0.5);
     }, [animation]);
 
+    // useEffect(() => {
+    //     if (audioRef) {
+    //         audioRef.addEventListener("play", () => actions["Talking"]?.play());
+    //         audioRef.addEventListener("ended", () => actions["Thinking"]?.play());
+    //     }
+    // }, [audioRef, actions]);
 
     useFrame(() => {
-
-        const currentAudioTime = audio.currentTime;
-
-        if (audio.paused || audio.ended) {
+        if (!audioRef.current) {
             setAnimation("Thinking");
+            return;
+        }
+        const currentAudioTime = audioRef.current.currentTime;
+        if (audioRef.paused || audioRef.ended) {
+            setAnimation("Thinking");
+            return;
         }
 
         Object.values(corresponding).forEach((value) => {
             nodes.Wolf3D_Head.morphTargetInfluences[nodes.Wolf3D_Head.morphTargetDictionary[value]] = 0;
             nodes.Wolf3D_Teeth.morphTargetInfluences[nodes.Wolf3D_Teeth.morphTargetDictionary[value]] = 0;
-
         });
+
         // console.log(nodes.Wolf3D_Head.morphTargetInfluences)
         for (let i = 0; i < lipsync.mouthCues.length; i++) {
             const mouthCue = lipsync.mouthCues[i];
@@ -75,31 +100,25 @@ export function Avatar(props) {
             }
         }
     });
-    useEffect(() => {
-        if (playAudio) {
-            audio.play();
-            if (script == "Gorsuch") {
-                setAnimation("Talking");
-            }
-        } else {
-            audio.pause();
-            setAnimation("Thinking");
-        }
-    }, [playAudio, script]);
 
-    useEffect(() => {
-        console.log(nodes.Wolf3D_Head.morphTargetDictionary);
+    // // detect ending so that I can set the animation to thinking and audioStarted to false
+    // useEffect(() => {
+    //     if (audioRef.current) {
+    //         audioRef.addEventListener("ended", () => {
+    //             setAnimation("Thinking");
+    //             setAudioStarted(false);
+    //         });
+    //     }
+    // }, [audioRef]);
 
-    }, [])
-
-    const { scene } = useGLTF('/models/674b527e1fcdb2befd1b4594.glb')
+    const { scene } = useGLTF('/public/models/MainModel.glb')
     const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
     const { nodes, materials } = useGraph(clone)
     return (
-        <group {...props} dispose={null} ref={group}>
-            <primitive object={nodes.Hips} />
+
+        <group {...props} dispose={null}>
+            <primitive object={nodes.Hips} ref={group} />
             <skinnedMesh geometry={nodes.Wolf3D_Hair.geometry} material={materials.Wolf3D_Hair} skeleton={nodes.Wolf3D_Hair.skeleton} />
-            <skinnedMesh geometry={nodes.Wolf3D_Glasses.geometry} material={materials.Wolf3D_Glasses} skeleton={nodes.Wolf3D_Glasses.skeleton} />
             <skinnedMesh geometry={nodes.Wolf3D_Body.geometry} material={materials.Wolf3D_Body} skeleton={nodes.Wolf3D_Body.skeleton} />
             <skinnedMesh geometry={nodes.Wolf3D_Outfit_Bottom.geometry} material={materials.Wolf3D_Outfit_Bottom} skeleton={nodes.Wolf3D_Outfit_Bottom.skeleton} />
             <skinnedMesh geometry={nodes.Wolf3D_Outfit_Footwear.geometry} material={materials.Wolf3D_Outfit_Footwear} skeleton={nodes.Wolf3D_Outfit_Footwear.skeleton} />
@@ -112,4 +131,4 @@ export function Avatar(props) {
     )
 }
 
-useGLTF.preload('/models/674b527e1fcdb2befd1b4594.glb')
+useGLTF.preload('/models/MainModel.glb')
