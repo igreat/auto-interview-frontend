@@ -13,7 +13,15 @@
     "dotenv": "^16.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.0.1"
+    "react-router-dom": "^7.0.1",
+    "@react-three/drei": "^9.118.0",
+    "@react-three/fiber": "8.13.3",
+    "@react-three/xr": "^5.7.1",
+    "@types/three": "0.152.1",
+    "extendable-media-recorder": "^9.2.17",
+    "leva": "^0.9.35",
+    "mp3-to-wav": "^0.1.11",
+    "three": "0.153.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

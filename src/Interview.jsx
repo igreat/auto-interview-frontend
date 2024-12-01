@@ -1,6 +1,10 @@
 import { useState, useRef } from "react";
 import { AudioManager } from "./utils/audioManager";
 import { transcribeAudio, getChatResponse } from "./utils/chatAPI";
+import { Loader } from "@react-three/drei";
+import { Leva } from "leva";
+import { Canvas } from "@react-three/fiber";
+import Experience from "./components/Experience";
 
 function LiveChatbot() {
   const [transcription, setTranscription] = useState("");
@@ -50,6 +54,11 @@ function LiveChatbot() {
 
   return (
     <div className="max-w-xl mx-auto p-4">
+      <Loader />
+      <Leva />
+      <Canvas shadows camera={{ position: [10, 0, 8], fov: 30 }}>
+        <Experience />
+      </Canvas>
       <h1 className="text-2xl font-bold text-center mb-6">Live Chatbot</h1>
 
       <div className="bg-gray-100 p-4 rounded-lg mb-4">
