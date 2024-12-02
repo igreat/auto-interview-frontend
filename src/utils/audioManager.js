@@ -1,4 +1,4 @@
-const CHUNK_TIME_MS = 2000;
+const CHUNK_TIME_MS = 200;
 
 export class AudioManager {
     constructor(onStopRecording, onSpeakingStateChange, silenceTimeMs, silenceThreshold, speakingThreshold) {
